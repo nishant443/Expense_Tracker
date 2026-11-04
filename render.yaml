@@ -1,0 +1,35 @@
+# Render Blueprint for the ExpenseFlow API (Node). The frontend deploys to Vercel/Cloudflare Pages.
+services:
+  - type: web
+    name: expenseflow-api
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: npm ci && npm run build --workspace backend
+    startCommand: node backend/dist/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL # Neon *pooled* connection string (…-pooler…/db?sslmode=require)
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: APP_URL # e.g. https://expenseflow.vercel.app
+        sync: false
+      - key: CORS_ORIGINS # same as APP_URL (comma-separated if several)
+        sync: false
+      - key: COOKIE_SAMESITE
+        value: lax # frontend proxies /api via a Vercel rewrite → first-party cookies
+      - key: TRUST_PROXY
+        value: "2" # Vercel edge + Render proxy
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

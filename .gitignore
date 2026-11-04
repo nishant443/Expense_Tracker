@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+.env
+.env.*
+!.env.example
+.pglite/
+*.log
+.DS_Store
+.vercel
