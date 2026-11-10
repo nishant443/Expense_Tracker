@@ -28,6 +28,8 @@ const schema = z
     COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
     COOKIE_DOMAIN: z.string().optional(),
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+    /** Resend API key (re_…). Sends over HTTPS — preferred on hosts that block SMTP ports (e.g. Render free). */
+    RESEND_API_KEY: z.string().optional(),
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().int().default(587),
     SMTP_USER: z.string().optional(),

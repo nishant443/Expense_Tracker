@@ -35,6 +35,22 @@ async function send(to: string, subject: string, html: string, link: string): Pr
     mailOutbox.push({ to, subject, link });
     return;
   }
+  if (env.RESEND_API_KEY) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: env.MAIL_FROM, to: [to], subject, html }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) {
+        logger.error({ status: res.status, body: await res.text(), subject }, 'Resend rejected email');
+      }
+    } catch (err) {
+      logger.error({ err, subject }, 'Failed to send email via Resend');
+    }
+    return;
+  }
   const t = getTransporter();
   if (!t) {
     if (env.isProd) {
