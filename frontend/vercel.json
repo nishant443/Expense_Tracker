@@ -5,7 +5,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://YOUR-API-HOST.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://expense-tracker-xcat.onrender.com/api/:path*" },
     { "source": "/((?!api/|assets/|icons/|sw.js|workbox-|manifest.webmanifest|favicon|apple-touch-icon|offline.html|theme-init.js|robots.txt).*)", "destination": "/index.html" }
   ],
   "headers": [
