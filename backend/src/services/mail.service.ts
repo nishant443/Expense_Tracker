@@ -30,10 +30,13 @@ function layout(title: string, body: string, cta: { label: string; url: string }
   </table></td></tr></table></body></html>`;
 }
 
-async function send(to: string, subject: string, html: string, link: string): Promise<void> {
+/** Result of a send attempt; `error` is a human-readable reason when delivery failed. */
+export type SendResult = { ok: true } | { ok: false; error: string };
+
+async function send(to: string, subject: string, html: string, link: string): Promise<SendResult> {
   if (env.isTest) {
     mailOutbox.push({ to, subject, link });
-    return;
+    return { ok: true };
   }
   if (env.RESEND_API_KEY) {
     try {
@@ -44,17 +47,27 @@ async function send(to: string, subject: string, html: string, link: string): Pr
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) {
-        logger.error({ status: res.status, body: await res.text(), subject }, 'Resend rejected email');
+        const body = await res.text();
+        logger.error({ status: res.status, body, subject }, 'Resend rejected email');
+        let reason = body;
+        try {
+          reason = (JSON.parse(body) as { message?: string }).message ?? body;
+        } catch {
+          /* non-JSON body */
+        }
+        return { ok: false, error: `Email provider rejected the message (${res.status}): ${reason}` };
       }
+      return { ok: true };
     } catch (err) {
       logger.error({ err, subject }, 'Failed to send email via Resend');
+      return { ok: false, error: 'Could not reach the email provider. Try again shortly.' };
     }
-    return;
   }
   const t = getTransporter();
   if (!t) {
     if (env.isProd) {
-      logger.warn({ subject }, 'SMTP not configured — email not sent');
+      logger.warn({ subject }, 'No email provider configured — email not sent');
+      return { ok: false, error: 'Email sending is not configured on the server (set RESEND_API_KEY).' };
     } else {
       // Development convenience only: SMTP isn't configured, so print the link prominently
       // (to stdout, independent of LOG_LEVEL) so the flow can be completed locally.
@@ -62,12 +75,14 @@ async function send(to: string, subject: string, html: string, link: string): Pr
       // eslint-disable-next-line no-console
       console.log(`\n${bar}\n📧  EMAIL NOT SENT (no SMTP configured) — open this link instead:\n    ${subject} → ${to}\n    ${link}\n${bar}\n`);
     }
-    return;
+    return { ok: true };
   }
   try {
     await t.sendMail({ from: env.MAIL_FROM, to, subject, html });
+    return { ok: true };
   } catch (err) {
     logger.error({ err, subject }, 'Failed to send email');
+    return { ok: false, error: 'The mail server rejected the message. Check SMTP settings.' };
   }
 }
 

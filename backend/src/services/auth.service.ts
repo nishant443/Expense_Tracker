@@ -200,7 +200,9 @@ export const authService = {
     const user = await usersRepository.findById(db(), userId);
     if (!user || user.emailVerifiedAt) return;
     const token = await createEmailToken(user.id, 'verify_email', 24 * 3_600_000);
-    void mailService.sendVerification(user.email, user.name, token);
+    // Awaited (unlike sign-up) so the user learns why no email arrived instead of a false "sent".
+    const result = await mailService.sendVerification(user.email, user.name, token);
+    if (!result.ok) throw new AppError(502, 'EMAIL_SEND_FAILED', result.error);
   },
 
   async purgeExpired(): Promise<void> {
