@@ -134,9 +134,10 @@ export function VerifyEmailPage() {
     if (!token || ran.current) return;
     ran.current = true;
     api
-      .post('/auth/verify-email', { token })
-      .then(async () => {
+      .post<{ alreadyVerified?: boolean }>('/auth/verify-email', { token })
+      .then(async (res) => {
         setState('ok');
+        if (res?.alreadyVerified) setMessage('Your email was already verified — nothing else to do.');
         if (useAuth.getState().user) {
           const { user } = await api.get<{ user: import('@expenseflow/shared').UserDTO }>('/users/me');
           useAuth.getState().setUser(user);
@@ -154,7 +155,7 @@ export function VerifyEmailPage() {
       {state === 'ok' && (
         <>
           <CheckCircle2 className="mx-auto mb-5 h-12 w-12 text-success" />
-          <AuthHeading title="Email verified" subtitle="Thanks! Your account is fully set up." />
+          <AuthHeading title="Email verified" subtitle={message || 'Thanks! Your account is fully set up.'} />
           <Button asChild size="lg" className="w-full">
             <Link to={authed ? '/' : '/login'}>{authed ? 'Go to dashboard' : 'Sign in'}</Link>
           </Button>

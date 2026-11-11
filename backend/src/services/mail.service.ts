@@ -40,8 +40,11 @@ async function send(to: string, subject: string, html: string, link: string): Pr
     if (env.isProd) {
       logger.warn({ subject }, 'SMTP not configured — email not sent');
     } else {
-      // Development convenience only: print the action link so flows can be completed locally.
-      logger.info(`📧 [dev mail] ${subject} → ${to}\n   ${link}`);
+      // Development convenience only: SMTP isn't configured, so print the link prominently
+      // (to stdout, independent of LOG_LEVEL) so the flow can be completed locally.
+      const bar = '─'.repeat(72);
+      // eslint-disable-next-line no-console
+      console.log(`\n${bar}\n📧  EMAIL NOT SENT (no SMTP configured) — open this link instead:\n    ${subject} → ${to}\n    ${link}\n${bar}\n`);
     }
     return;
   }

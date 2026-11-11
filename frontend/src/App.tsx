@@ -11,6 +11,7 @@ import { startSyncEngine } from '@/services/sync-engine';
 import { useAuth } from '@/stores/auth';
 import { applyTheme, useUi } from '@/stores/ui';
 import { UpdatePrompt } from '@/components/update-prompt';
+import { TitleBar } from '@/components/title-bar';
 
 // Route-level code splitting: each page is its own chunk.
 const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
@@ -106,7 +107,8 @@ export default function App() {
       <Suspense fallback={<Splash />}>
         <RouterProvider router={router} />
       </Suspense>
-      <Toaster position="top-center" richColors closeButton toastOptions={{ className: 'font-sans' }} />
+      <TitleBar />
+      <Toaster position="top-center" richColors closeButton offset="calc(var(--tb) + 16px)" toastOptions={{ className: 'font-sans' }} />
       <UpdatePrompt />
     </PersistQueryClientProvider>
   );

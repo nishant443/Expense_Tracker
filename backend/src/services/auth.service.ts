@@ -174,9 +174,26 @@ export const authService = {
     await this.logoutAll(userId);
   },
 
-  async verifyEmail(token: string): Promise<void> {
-    const userId = await consumeEmailToken(token, 'verify_email');
-    await usersRepository.update(db(), userId, { emailVerifiedAt: new Date() });
+  /**
+   * Idempotent: re-opening a link (or an older link after a resend) for an account that is
+   * already verified reports success instead of a confusing "expired" error.
+   */
+  async verifyEmail(token: string): Promise<{ alreadyVerified: boolean }> {
+    try {
+      const userId = await consumeEmailToken(token, 'verify_email');
+      await usersRepository.update(db(), userId, { emailVerifiedAt: new Date() });
+      return { alreadyVerified: false };
+    } catch (err) {
+      const [known] = await db()
+        .select({ userId: authTokens.userId })
+        .from(authTokens)
+        .where(and(eq(authTokens.tokenHash, sha256(token)), eq(authTokens.purpose, 'verify_email')))
+        .limit(1);
+      const user = known && (await usersRepository.findById(db(), known.userId));
+      if (user?.emailVerifiedAt) return { alreadyVerified: true };
+      if (known) throw badRequest('This link has expired or was replaced by a newer one. Request a new verification email.');
+      throw err;
+    }
   },
 
   async resendVerification(userId: string): Promise<void> {

@@ -94,6 +94,37 @@
   }
 }
 
+/*
+ * Installed desktop app with Window Controls Overlay: the browser's title bar is removed and
+ * only the native minimise / maximise / close buttons remain. We draw a draggable title bar
+ * in the freed space and push the app below it via --tb.
+ */
+:root {
+  --tb: 0px;
+}
+.wco-titlebar {
+  display: none;
+}
+@media (display-mode: window-controls-overlay) {
+  :root {
+    --tb: env(titlebar-area-height, 33px);
+  }
+  body {
+    padding-top: var(--tb);
+  }
+  .wco-titlebar {
+    display: flex;
+    position: fixed;
+    top: env(titlebar-area-y, 0);
+    left: env(titlebar-area-x, 0);
+    width: env(titlebar-area-width, 100%);
+    height: var(--tb);
+    z-index: 60;
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+}
+
 @layer utilities {
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);

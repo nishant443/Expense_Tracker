@@ -83,8 +83,8 @@ export const authController = {
 
   verifyEmail: asyncHandler(async (req, res) => {
     const { token } = parseBody(verifyEmailSchema, req);
-    await authService.verifyEmail(token);
-    res.json({ message: 'Email verified' });
+    const { alreadyVerified } = await authService.verifyEmail(token);
+    res.json({ message: alreadyVerified ? 'Email already verified' : 'Email verified', alreadyVerified });
   }),
 
   resendVerification: asyncHandler(async (req, res) => {

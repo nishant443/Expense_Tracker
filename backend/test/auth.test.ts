@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Express } from 'express';
 import { mailOutbox } from '../src/services/mail.service';
 import { closeDb, registerClient, setupApp } from './helpers';
+// registerClient issues the verification email on sign-up.
 
 let app: Express;
 
@@ -110,6 +111,28 @@ describe('auth', () => {
     await agent.post('/api/auth/verify-email').set('X-CSRF-Token', body.csrfToken).send({ token: vt }).expect(200);
     const me = await agent.get('/api/users/me').expect(200);
     expect(me.body.user.emailVerified).toBe(true);
+  });
+
+  it('handles resent and re-opened verification links clearly', async () => {
+    const c = await registerClient(app, 'verify@test.dev');
+    const tokenOf = () => new URL(mailOutbox.filter((m) => m.to === 'verify@test.dev').pop()!.link).searchParams.get('token')!;
+    const first = tokenOf();
+    await c.post('/api/auth/resend-verification').expect(202);
+    const second = tokenOf();
+    expect(second).not.toBe(first);
+
+    // Older link after a resend → explains it was replaced (account not verified yet).
+    const old = await c.post('/api/auth/verify-email', { token: first }).expect(400);
+    expect(old.body.error.message).toMatch(/replaced by a newer one/);
+
+    const ok = await c.post('/api/auth/verify-email', { token: second }).expect(200);
+    expect(ok.body.alreadyVerified).toBe(false);
+    // Re-opening any of the links once verified → success, not "expired".
+    const again = await c.post('/api/auth/verify-email', { token: second }).expect(200);
+    expect(again.body.alreadyVerified).toBe(true);
+    expect((await c.post('/api/auth/verify-email', { token: first }).expect(200)).body.alreadyVerified).toBe(true);
+    // Garbage tokens are still rejected.
+    await c.post('/api/auth/verify-email', { token: 'x'.repeat(43) }).expect(400);
   });
 
   it('validates password strength', async () => {

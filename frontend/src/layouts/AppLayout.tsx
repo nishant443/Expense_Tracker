@@ -75,7 +75,7 @@ function Sidebar() {
   return (
     <aside
       className={cn(
-        'sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border/70 bg-surface/60 px-3 py-5 backdrop-blur transition-[width] duration-300 lg:flex',
+        'sticky top-[var(--tb)] hidden h-[calc(100dvh-var(--tb))] shrink-0 flex-col border-r border-border/70 bg-surface/60 px-3 py-5 backdrop-blur transition-[width] duration-300 lg:flex',
         collapsed ? 'w-[76px]' : 'w-64',
       )}
     >
@@ -193,7 +193,7 @@ export function AppLayout() {
     <div className="flex min-h-dvh">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-transparent bg-background/80 backdrop-blur-xl safe-top">
+        <header className="sticky top-[var(--tb)] z-30 border-b border-transparent bg-background/80 backdrop-blur-xl safe-top">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4 lg:h-16 lg:px-8">
             <Link to="/" className="lg:hidden" aria-label="ExpenseFlow home">
               <Logo className="[&_svg]:h-8 [&_svg]:w-8" />

@@ -16,7 +16,7 @@ export function VerifyEmailBanner() {
     try {
       await api.post('/auth/resend-verification');
       setSent(true);
-      toast.success('Verification email sent');
+      toast.success('Verification email sent', { description: 'Use the newest email — earlier links stop working.' });
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {

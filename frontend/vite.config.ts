@@ -31,7 +31,8 @@ export default defineConfig({
         start_url: '/?source=pwa',
         scope: '/',
         display: 'standalone',
-        display_override: ['standalone', 'minimal-ui'],
+        // Desktop: draw our own title bar; the OS keeps minimise / maximise / close.
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
         orientation: 'portrait',
         background_color: '#F7F8FA',
         theme_color: '#2563EB',
